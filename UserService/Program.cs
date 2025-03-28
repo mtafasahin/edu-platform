@@ -1,5 +1,13 @@
 var builder = WebApplication.CreateBuilder(args);
 
+// 📌 Kestrel için port değerini `appsettings.json` veya Environment Variable'dan al
+var kestrelPort = builder.Configuration.GetValue<int>("Kestrel:Port", 5000); // Varsayılan 5079
+
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(kestrelPort); // 🟢 Dinamik Port Kullanımı
+});
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
