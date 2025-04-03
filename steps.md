@@ -23,7 +23,7 @@ Merkezi erişim kontrolü sağlar	        Role-based access ile OIDC üzerinden
          │
          └──> [Keycloak] (OIDC doğrulama)
 
-
+# bunu herşeyden önce bir kez çalıştırmak lazım.
 docker compose run --rm kong kong migrations bootstrap
 Bu komut:
 kong servisini tek seferlik çalıştırır
@@ -91,6 +91,10 @@ JSON dökümanı gelecek → içinde şunu bul: "public_key"
 Örnek: 
 {"realm":"edu-platform","public_key":"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA15gtOhj0z0hFma1xXiKX8ve/xzuwlIKbAj1GkuCDmjtNRswouBoodTVq6n78gJFULQZFxC07Z3TNva5ccUtSSbxJtKkHKR6FyEqmUtnpt1P+8I6B/NLRZNJGvEslVlBwESDcQehO2MAxT+5j0M9OGmDjaISgYfe9guaNPLIOHA/B9Q9VsM8viUPDqtLTGvV+Oxa1exaJJPfme9F+sZVTkvtaneR7UAQGOxSjZHTwa7ILiCbS8i8wZzYeeAO+rjcfTia6gZF+OoUvL+18DXNQNPW4BvZvE7i4pQ74cp6ykfcEBvU7xvmJobn6KPULiWcoqrU1W14ZdPUvmBPj92ioFQIDAQAB","token-service":"http://localhost:8080/realms/edu-platform/protocol/openid-connect","account-service":"http://localhost:8080/realms/edu-platform/account","tokens-not-before":0}
 
+
+Örnek 2: 
+{"realm":"edu-platform","public_key":"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5sBjyrUDwrWLkAmrvqPuSfsB2JjGdBV0Cw4e+0ddyIuFrdEa8OG+2h5AByz4lzb6ZwNFfth6OTd2vJCujqJyq9ms4ZPsCE1k6C2FZCWEUm9xwW7p94FIMawcJ9/98YMCvCYtWt85jCDSLuMfyi/QSv9DqjQP38DwbX8oduriJIQpB9F7IlqK40oXXApVQMSKReLLzWx01Yv6n/rC6IV9yzj7COrPzx5loXFS6OZdP39EM83B88b1dV2L66IxYsjIUj9DS5FRNFm64HmrMcKCkBKgRhBtqJ8rxfu38RJpgxVSHAjjRUDs9IFgp3pisuxdaWWDc1fJHNI2K2+75chxQwIDAQAB","token-service":"http://localhost:8080/realms/edu-platform/protocol/openid-connect","account-service":"http://localhost:8080/realms/edu-platform/account","tokens-not-before":0}
+
 Bu RSA Public Key (modül)’dür. Ama Kong PEM formatında ister. Public Key’i PEM formatına dönüştür. Aşağıdaki gibi
 
 -----BEGIN PUBLIC KEY-----
@@ -113,6 +117,13 @@ curl -i -X POST http://localhost:8001/consumers/keycloak-user/jwt \
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA15gtOhj0z0hFma1xXiKX8ve/xzuwlIKbAj1GkuCDmjtNRswouBoodTVq6n78gJFULQZFxC07Z3TNva5ccUtSSbxJtKkHKR6FyEqmUtnpt1P+8I6B/NLRZNJGvEslVlBwESDcQehO2MAxT+5j0M9OGmDjaISgYfe9guaNPLIOHA/B9Q9VsM8viUPDqtLTGvV+Oxa1exaJJPfme9F+sZVTkvtaneR7UAQGOxSjZHTwa7ILiCbS8i8wZzYeeAO+rjcfTia6gZF+OoUvL+18DXNQNPW4BvZvE7i4pQ74cp6ykfcEBvU7xvmJobn6KPULiWcoqrU1W14ZdPUvmBPj92ioFQIDAQAB
 -----END PUBLIC KEY-----
 EOF
+
+cat > keycloak_pub.pem <<EOF
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5sBjyrUDwrWLkAmrvqPuSfsB2JjGdBV0Cw4e+0ddyIuFrdEa8OG+2h5AByz4lzb6ZwNFfth6OTd2vJCujqJyq9ms4ZPsCE1k6C2FZCWEUm9xwW7p94FIMawcJ9/98YMCvCYtWt85jCDSLuMfyi/QSv9DqjQP38DwbX8oduriJIQpB9F7IlqK40oXXApVQMSKReLLzWx01Yv6n/rC6IV9yzj7COrPzx5loXFS6OZdP39EM83B88b1dV2L66IxYsjIUj9DS5FRNFm64HmrMcKCkBKgRhBtqJ8rxfu38RJpgxVSHAjjRUDs9IFgp3pisuxdaWWDc1fJHNI2K2+75chxQwIDAQAB
+-----END PUBLIC KEY-----
+EOF
+
 
 
 curl -i -X POST http://localhost:8001/consumers/keycloak-user/jwt \
@@ -232,3 +243,55 @@ Frontend bu token’la GET /users/me gibi bir isteği Kong’a yollar
 Kong token’ı doğrular → UserService’e yönlendirir
 
 UserService sub’dan gelen kullanıcıyı bulur → profilini döner
+
+
+
+
+#######################
+
+🎯 Keycloak ve UserService İlişkisi:
+Kullanıcı Kimliği:
+
+Keycloak, kullanıcıları ID ile tanımlar. Bu ID, her kullanıcı için benzersizdir ve UserService'te bir kullanıcının Keycloak'taki kimliğini temsil eder.
+
+Eğer UserService ve Keycloak arasında bir entegre bağlantı kuruyorsanız, her kullanıcının Keycloak'taki kimliği (ID'si)'ne ihtiyacınız olur.
+
+Veritabanı Yönetimi:
+
+UserService'teki veritabanı genellikle kullanıcı profilleri, kullanıcı bilgileri gibi verileri tutar.
+
+Ancak, Keycloak'ta, kimlik doğrulama ve kullanıcı yönetimi gibi işlemler yapılır.
+
+Bu durumda, UserService'teki User tablosunda, kullanıcıların Keycloak'taki kimlik bilgilerini tutmanız, her iki sistemin entegre şekilde çalışmasını sağlar.
+
+💡 KeycloakId'nin Kullanılma Amacı:
+Kullanıcı Yönetimi:
+
+Kullanıcı kaydı yaparken, Keycloak’ta yeni bir kullanıcı oluşturduğunda, bu kullanıcının ID'sini alırsınız.
+
+UserService'te, bu kullanıcıyı KeycloakId ile eşleştirirsiniz.
+
+Eğer bir kullanıcı tekrar giriş yaparsa, JWT token içerisindeki KeycloakId'yi kullanarak UserService veritabanındaki doğru kullanıcıyı bulabilirsiniz.
+
+Kullanıcı Takibi:
+
+UserService'te, sadece UserService'teki verilerle çalışmak yerine, Keycloak'ta doğrulanan bir kullanıcıyı takip edebilmek için bu ID'yi saklarsınız.
+
+Bu KeycloakId, kullanıcıların şifre sıfırlama veya profil güncellemeleri gibi işlemler için Keycloak ile senkronize olmanıza olanak tanır.
+
+🎯 Örnek Senaryo:
+Bir kullanıcı POST /register ile kaydoldular.
+
+Keycloak’a kullanıcı kaydedildi ve Keycloak’tan bir KeycloakId aldık.
+
+Bu KeycloakId, UserService'teki User tablosuna eklenir, böylece UserService'teki kullanıcılar ile Keycloak’taki kullanıcılar arasında ilişki kurulmuş olur.
+
+Kullanıcı bir sonraki girişinde, JWT token'daki KeycloakId ile UserService'teki doğru kullanıcı bilgilerini alabiliriz.
+
+###############
+
+
+yarattığımız kong-client'ın ServiceAccount'una gidip, service accounts roles checkini işaretler
+![alt text](image.png)
+sonra Serivice account Rollerden Assign Role deyip, Client'a göre filtrele deyip, realm admin yap.
+![alt text](image-1.png)

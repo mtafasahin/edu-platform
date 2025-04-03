@@ -26,6 +26,7 @@ services:
       KC_DB_PASSWORD: keycloak
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_LOGLEVEL: DEBUG
     ports:
       - "8080:8080"
     depends_on:
@@ -97,6 +98,32 @@ services:
       - kong-db
     networks:
       - backend
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@edu.com
+      PGADMIN_DEFAULT_PASSWORD: adminpass
+    ports:
+      - "5050:80"
+    networks:
+      - backend      
+
+  angular-app:
+    container_name: angular-app
+    build:
+      context: ./UI
+      dockerfile: Dockerfile.ui
+    ports:
+      - "4200:4200"
+    environment:
+      - NODE_ENV=development
+    networks:
+      - backend
+    volumes:
+      - ./UI:/app 
 
 volumes:
   keycloak_data:
